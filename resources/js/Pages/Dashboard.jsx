@@ -1,13 +1,17 @@
 import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Dashboard({ auth, data }) {
+export default function Dashboard({ auth, data, session }) {
     return (
         <AuthenticatedLayout title="Dashboard">
             <Head title="Dashboard" />
             <div className="bg-white p-8 rounded shadow-md w-full max-w-2xl mx-auto">
                 <h2 className="text-2xl font-bold mb-6 text-center">Dashboard</h2>
                 <p className="mb-4">Welcome, {auth.user.nom}!</p>
+
+                {session?.success && (
+                    <div className="bg-green-500 text-white p-2 mb-4">{session.success}</div>
+                )}
 
                 {auth.user.role === 'Client' && (
                     <div>
@@ -20,7 +24,7 @@ export default function Dashboard({ auth, data }) {
                             </Link>
                         </div>
                         <h3 className="text-xl font-semibold mb-2">Your Orders</h3>
-                        {data.commandes.length === 0 ? (
+                        {data.commandes?.length === 0 ? (
                             <p>No orders found.</p>
                         ) : (
                             <ul>
@@ -40,7 +44,7 @@ export default function Dashboard({ auth, data }) {
                 {auth.user.role === 'Livreur' && (
                     <div>
                         <h3 className="text-xl font-semibold mb-2">Assigned Deliveries</h3>
-                        {data.commandes.length === 0 ? (
+                        {data.commandes?.length === 0 ? (
                             <p>No deliveries assigned.</p>
                         ) : (
                             <ul>
@@ -60,7 +64,7 @@ export default function Dashboard({ auth, data }) {
                 {auth.user.role === 'Admin' && (
                     <div>
                         <h3 className="text-xl font-semibold mb-2">All Orders</h3>
-                        {data.commandes.length === 0 ? (
+                        {data.commandes?.length === 0 ? (
                             <p>No orders found.</p>
                         ) : (
                             <ul>
@@ -76,7 +80,9 @@ export default function Dashboard({ auth, data }) {
                             </ul>
                         )}
                         <h3 className="text-xl font-semibold mb-2 mt-6">All Users</h3>
-                        {data.users?.length ? (
+                        {data.users?.length === 0 ? (
+                            <p>No users found.</p>
+                        ) : (
                             <ul>
                                 {data.users.map((user) => (
                                     <li key={user.id} className="mb-2">
@@ -85,8 +91,6 @@ export default function Dashboard({ auth, data }) {
                                     </li>
                                 ))}
                             </ul>
-                        ) : (
-                            <p>No users found.</p>
                         )}
                     </div>
                 )}

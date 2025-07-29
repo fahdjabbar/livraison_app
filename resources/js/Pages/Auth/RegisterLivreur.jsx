@@ -10,21 +10,33 @@ export default function RegisterLivreur() {
     const { data, setData, post, processing, errors, reset } = useForm({
         nom: '',
         email: '',
-        mot_de_passe: '',
-        mot_de_passe_confirmation: '',
+        password: '', 
+        password_confirmation: '', 
         adresse: '',
         disponibilite: false,
     });
 
     useEffect(() => {
         return () => {
-            reset('mot_de_passe', 'mot_de_passe_confirmation');
+            reset('password', 'password_confirmation');
         };
     }, []);
 
     const submit = (e) => {
         e.preventDefault();
+        // Mapper les champs avant la soumission
+        const submissionData = {
+            nom: data.nom,
+            email: data.email,
+            password: data.password, // Mapper mot_de_passe vers password
+            password_confirmation: data.password_confirmation, // Mapper vers password_confirmation
+            adresse: data.adresse,
+            disponibilite: data.disponibilite,
+        };
+        console.log(`submissionData == ${JSON.stringify(submissionData)}`);
+        
         post(route('register.livreur.store'), {
+            data: submissionData,
             onError: (errors) => console.log('Registration errors:', errors),
             onSuccess: () => console.log('Registration successful'),
         });
@@ -52,6 +64,7 @@ export default function RegisterLivreur() {
                         <TextInput
                             id="email"
                             type="email"
+                            name='email'
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             required
@@ -64,11 +77,12 @@ export default function RegisterLivreur() {
                         <TextInput
                             id="mot_de_passe"
                             type="password"
-                            value={data.mot_de_passe}
-                            onChange={(e) => setData('mot_de_passe', e.target.value)}
+                            name='password'
+                            value={data.password}
+                            onChange={(e) => setData('password', e.target.value)}
                             required
                         />
-                        <InputError message={errors.mot_de_passe} className="mt-2" />
+                        <InputError message={errors.password} className="mt-2" /> {/* Ajuster l'erreur */}
                     </div>
 
                     <div className="mb-4">
@@ -76,11 +90,12 @@ export default function RegisterLivreur() {
                         <TextInput
                             id="mot_de_passe_confirmation"
                             type="password"
-                            value={data.mot_de_passe_confirmation}
-                            onChange={(e) => setData('mot_de_passe_confirmation', e.target.value)}
+                            name='password_confirmation'
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
                             required
                         />
-                        <InputError message={errors.mot_de_passe_confirmation} className="mt-2" />
+                        <InputError message={errors.password_confirmation} className="mt-2" /> {/* Ajuster l'erreur */}
                     </div>
 
                     <div className="mb-4">
@@ -88,6 +103,7 @@ export default function RegisterLivreur() {
                         <TextInput
                             id="adresse"
                             type="text"
+                            name='adresse'
                             value={data.adresse}
                             onChange={(e) => setData('adresse', e.target.value)}
                             required

@@ -35,20 +35,21 @@ class RegisteredUserController extends Controller
         $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'mot_de_passe' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'adresse' => ['required', 'string', 'max:255'],
         ]);
 
         $user = User::create([
             'nom' => $request->nom,
             'email' => $request->email,
-            'mot_de_passe' => Hash::make($request->mot_de_passe),
+            'password' => Hash::make($request->password),
             'role' => 'client',
             'adresse' => $request->adresse,
         ]);
 
         event(new Registered($user));
         Auth::login($user);
+        session()->flash('success', 'Inscription réussie ! Bienvenue.');
         return redirect(RouteServiceProvider::HOME);
     }
 
@@ -57,7 +58,7 @@ class RegisteredUserController extends Controller
         $request->validate([
             'nom' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'mot_de_passe' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'adresse' => ['required', 'string', 'max:255'],
             'disponibilite' => ['boolean'],
         ]);
@@ -65,13 +66,16 @@ class RegisteredUserController extends Controller
         $user = User::create([
             'nom' => $request->nom,
             'email' => $request->email,
-            'mot_de_passe' => Hash::make($request->mot_de_passe),
+            'password' => Hash::make($request->password),
             'role' => 'livreur',
             'adresse' => $request->adresse,
             'disponibilite' => $request->disponibilite,
+            'statut' => 'suspendu',
         ]);
+        
 
         event(new Registered($user));
+        session()->flash('success', 'Inscription réussie ! Bienvenue.');
         Auth::login($user);
         return redirect(RouteServiceProvider::HOME);
     }

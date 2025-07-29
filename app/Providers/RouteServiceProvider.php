@@ -23,12 +23,7 @@ class RouteServiceProvider extends ServiceProvider
 
     public static function home()
     {
-        return match (auth()->check() ? auth()->user()->role : null) {
-            'client' => '/dashboard/client',
-            'livreur' => '/dashboard/livreur',
-            'admin' => '/admin',
-            default => '/login',
-        };
+        return auth()->check() ? '/dashboard' : '/login';
     }
 
     protected function configureRateLimiting()

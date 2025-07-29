@@ -12,7 +12,14 @@ class Notification extends Model
         'contenu',
         'lu',
         'date',
-    ];
+    ]; 
+
+    public function marquerCommeLue() {
+        
+    $this->lu = true;
+    $this->save();
+}
+
 
     public function user()
     {

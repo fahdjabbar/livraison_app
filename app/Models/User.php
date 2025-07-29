@@ -14,21 +14,21 @@ class User extends Authenticatable
     protected $fillable = [
         'nom',
         'email',
-        'mot_de_passe',
+        'password',
         'role',
         'statut',
         'adresse',
         'disponibilite',
     ];
 
-    public function setMotDePasseAttribute($value)
+    /*public function setMotDePasseAttribute($value)
     {
         $this->attributes['mot_de_passe'] = Hash::make($value);
-    }
+    }*/
 
     public function getAuthPassword()
     {
-        return $this->mot_de_passe;
+        return $this->password;
     }
 
     public function commandes()
@@ -47,7 +47,7 @@ class User extends Authenticatable
     }
 
     protected $hidden = [
-        'mot_de_passe',
+        'password',
     ];
 
     protected function casts(): array

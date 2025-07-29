@@ -14,10 +14,11 @@ return new class extends Migration
             $table->string('role')->default('client');
             $table->string('adresse')->nullable();
             $table->boolean('disponibilite')->default(false);
-            $table->string('mot_de_passe'); // Doit être présent et non nullable par défaut
+            $table->string('password'); // Doit être présent et non nullable par défaut
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
+            $table->string('statut')->default('actif')->after('role');
         });
     }
 

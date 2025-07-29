@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Inertia\Inertia;
 use App\Models\Commande;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'auth' => ['user' => $user],
             'data' => $data,
+            'session' => session()->all(),
         ]);
     }
 }
