@@ -22,6 +22,7 @@ class DashboardController extends Controller
             $data['commandes'] = Commande::all();
             $data['users'] = User::all();
         }
+        
 
         return Inertia::render('Dashboard', [
             'auth' => ['user' => $user],
@@ -29,4 +30,16 @@ class DashboardController extends Controller
             'session' => session()->all(),
         ]);
     }
+         public function toggleStatus(User $user)
+    {
+      if ($user->role !== 'Livreur') {
+        abort(403, 'Seuls les livreurs peuvent être activés/suspendus.');
+     }
+
+         $user->statut = $user->statut === 'actif' ? 'suspendu' : 'actif';
+         $user->save();
+
+         return redirect()->route('dashboard')->with('success', 'Statut mis à jour avec succès.');
+}
+
 }

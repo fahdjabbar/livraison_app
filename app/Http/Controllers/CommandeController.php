@@ -12,6 +12,35 @@ class CommandeController extends Controller
         return Inertia::render('Commande/Create');
     }
 
+
+        public function show(Commande $commande)
+{
+    // Vérifier si la commande appartient bien au client connecté
+    if ($commande->client_id !== auth()->id()) {
+        abort(403, 'Accès non autorisé à cette commande');
+    }
+
+    return Inertia::render('Commande/Show', [
+        'commande' => $commande->load('livreur', 'livraison'),
+    ]);
+}
+
+public function destroy(Commande $commande)
+{
+    if ($commande->client_id !== auth()->id()) {
+        abort(403);
+    }
+
+    if ($commande->etat !== 'à traiter') {
+        return back()->with('error', 'Commande non annulable');
+    }
+
+    $commande->delete();
+    return redirect()->route('dashboard')->with('status', 'Order created successfully');
+}
+
+
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -29,6 +58,7 @@ class CommandeController extends Controller
             'note' => $validated['note'],
             'etat' => 'à traiter',
         ]);
+        
 
         return redirect()->route('dashboard')->with('status', 'Order created successfully');
     }

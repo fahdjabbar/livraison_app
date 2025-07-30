@@ -3,7 +3,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 
 export default function Create({ auth }) {
@@ -20,7 +20,7 @@ export default function Create({ auth }) {
     };
 
     return (
-        <GuestLayout title="Create Order">
+        <AuthenticatedLayout title="Create Order">
             <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-6 text-center">Create Order</h2>
                 <form onSubmit={submit}>
@@ -78,6 +78,6 @@ export default function Create({ auth }) {
                     </div>
                 </form>
             </div>
-        </GuestLayout>
+        </AuthenticatedLayout>
     );
 }

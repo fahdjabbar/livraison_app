@@ -25,10 +25,28 @@ class AuthenticatedSessionController extends Controller
 
         $credentials = $request->validate([
             'email' => 'required|email',
-            'mot_de_passe' => 'required|string',
+            'password' => 'required|string',
         ]);
 
-        if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['mot_de_passe'], 'statut' => 'actif'], $request->boolean('remember'))) {
+        $user = \App\Models\User::where('email', $credentials['email'])->first();
+
+     if (!$user || !\Illuminate\Support\Facades\Hash::check($credentials['password'], $user->password)) {
+    return back()->withErrors([
+        'email' => 'Les identifiants fournis ne correspondent pas à nos enregistrements.',
+    ])->onlyInput('email');
+}
+
+      if ($user->statut !== 'actif') {
+      return back()->withErrors([
+        'email' => 'Votre compte n\'est pas encore activé. Veuillez contacter un administrateur.',
+      ])->onlyInput('email');
+}
+
+Auth::login($user, $request->boolean('remember'));
+$request->session()->regenerate();
+
+return redirect()->intended(route('dashboard'));
+ {
             $request->session()->regenerate();
             Log::info('Login successful', ['user_id' => Auth::id()]);
             return redirect()->intended(route('dashboard'));

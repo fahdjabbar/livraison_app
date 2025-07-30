@@ -10,22 +10,23 @@ import { useEffect } from 'react';
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
-          mot_de_passe: '',
+        password: '',
           remember: false,
     });
      useEffect(() => {
           return () => {
-              setData('mot_de_passe', '');
+              setData('password', '');
           };
       }, []);
 
-    const submit = (e) => {
-        e.preventDefault();
-        post('/login'), {
-            onError: (errors) => console.log('Login errors:', errors),
-            onSuccess: () => console.log('Login successful'),
-        };
-    };
+  const submit = (e) => {
+    e.preventDefault();
+    post('/login', {
+        onError: (errors) => console.log('Login errors:', errors),
+        onSuccess: () => console.log('Login successful'),
+    });
+};
+
 
     return (
          <GuestLayout title="Log in">
@@ -52,12 +53,12 @@ export default function Login({ status, canResetPassword }) {
                               <input
                                   id="mot_de_passe"
                                   type="password"
-                                  value={data.mot_de_passe}
-                                  onChange={(e) => setData('mot_de_passe', e.target.value)}
+                                  value={data.password}
+                                  onChange={(e) => setData('password', e.target.value)}
                                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
                                   required
                               />
-                              {errors.mot_de_passe && <div className="text-red-600 text-sm mt-1">{errors.mot_de_passe}</div>}
+                              {errors.password && <div className="text-red-600 text-sm mt-1">{errors.password}</div>}
                           </div>
 
                           <div className="mb-4">
