@@ -23,20 +23,22 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::patch('/users/{user}/toggle-status', [DashboardController::class, 'toggleStatus'])->name('users.toggleStatus');
-
+    Route::post('/commandes/{commande}/affecter', [CommandeController::class, 'affecter'])->name('commandes.affecter');
+    Route::delete('/commandes/{commande}', [CommandeController::class, 'destroy'])->name('commandes.destroy'); 
 
     // 🧍 CLIENT
     Route::middleware('role:Client')->group(function () {
         Route::get('/commandes/create', [CommandeController::class, 'create'])->name('commandes.create');
         Route::post('/commandes', [CommandeController::class, 'store'])->name('commandes.store');
         Route::get('/commandes/{commande}', [CommandeController::class, 'show'])->name('commandes.show');
-        Route::delete('/commandes/{commande}', [CommandeController::class, 'destroy'])->name('commandes.destroy');
+        
     });
 
     // 🧍 LIVREUR
     Route::middleware('role:Livreur')->group(function () {
-        Route::post('/commandes/{commande}/start', [LivraisonController::class, 'start'])->name('livraisons.start');
-        Route::post('/commandes/{commande}/complete', [LivraisonController::class, 'complete'])->name('livraisons.complete');
+         Route::post('/commandes/{commande}/livree', [CommandeController::class, 'marquerLivree'])->name('commandes.livree');
+        //Route::post('/commandes/{commande}/start', [LivraisonController::class, 'start'])->name('livraisons.start');
+        //Route::post('/commandes/{commande}/complete', [LivraisonController::class, 'complete'])->name('livraisons.complete');
     });
     
 

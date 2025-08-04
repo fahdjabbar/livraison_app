@@ -1,9 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\User;
+use Inertia\Inertia;
 use App\Models\Commande;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class CommandeController extends Controller
 {
@@ -25,18 +26,75 @@ class CommandeController extends Controller
     ]);
 }
 
-public function destroy(Commande $commande)
+  public function destroy(Commande $commande)
 {
-    if ($commande->client_id !== auth()->id()) {
-        abort(403);
+    $user = auth()->user();
+
+    // Seul le client PROPRIÉTAIRE ou un ADMIN peut annuler
+    $estProprietaire = $commande->client_id === $user->id;
+    $estAdmin = $user->role === 'Admin';
+    if (!($estProprietaire || $estAdmin)) {
+        abort(403, 'Non autorisé à annuler cette commande.');
     }
 
+    // Ne peut annuler que si encore "à traiter"
     if ($commande->etat !== 'à traiter') {
         return back()->with('error', 'Commande non annulable');
     }
 
     $commande->delete();
-    return redirect()->route('dashboard')->with('status', 'Order created successfully');
+    return redirect()->route('dashboard')->with('success', 'Commande annulée avec succès.');
+}
+
+
+ 
+     public function affecter(Request $request, Commande $commande)
+   {
+     $request->validate([
+        'livreur_id' => 'required|exists:users,id',
+      ]);
+      // Vérifier que le livreur est bien "actif" et "Livreur"
+      $livreur = User::where('id', $request->livreur_id)
+                   ->where('role', 'Livreur')
+                   ->where('statut', 'actif')
+                   ->first();
+      if (!$livreur) {
+        return back()->with('error', 'Livreur non valide ou inactif.');
+    }
+     $commande->livreur_id = $livreur->id;
+     $commande->etat = 'en cours';
+     $commande->save();
+     // (Optionnel) Notifier le livreur ici
+     return redirect()->route('dashboard')->with('success', 'Livreur affecté avec succès.');
+    }
+
+   public function affecterAuto(Commande $commande)
+    {
+    // Exemple simplifié : choisir le 1er livreur actif dispo
+    $livreur = User::where('role', 'Livreur')->where('statut', 'actif')->first();
+    if (!$livreur) {
+        return back()->with('error', 'Aucun livreur disponible pour l’auto-affectation.');
+    }
+    $commande->livreur_id = $livreur->id;
+    $commande->etat = 'en cours';
+    $commande->save();
+    return redirect()->route('dashboard')->with('success', 'Livreur affecté automatiquement.');
+     } 
+
+     public function marquerLivree(Commande $commande)
+{
+    // Le livreur doit être le propriétaire de la commande et la commande doit être "en cours"
+    if ($commande->livreur_id !== auth()->id()) {
+        abort(403, 'Vous ne pouvez modifier que vos propres commandes.');
+    }
+    if ($commande->etat !== 'en cours') {
+        return back()->with('error', 'Commande non modifiable.');
+    }
+    $commande->etat = 'livrée';
+    $commande->date_livraison = now();
+    $commande->save();
+    // (Optionnel) Notifier le client que sa commande a été livrée.
+    return redirect()->route('dashboard')->with('success', 'Commande marquée comme livrée.');
 }
 
 

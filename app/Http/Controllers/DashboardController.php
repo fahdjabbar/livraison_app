@@ -19,10 +19,12 @@ class DashboardController extends Controller
         } elseif ($user->role === 'Livreur') {
             $data['commandes'] = Commande::where('livreur_id', $user->id)->get();
         } elseif ($user->role === 'Admin') {
-            $data['commandes'] = Commande::all();
-            $data['users'] = User::all();
-        }
-        
+         $data['commandes'] = Commande::with(['client', 'livreur'])->get();
+         $data['users'] = User::all();
+         $data['livreurs'] = User::where('role', 'Livreur')->where('statut', 'actif')->get();
+}
+
+
 
         return Inertia::render('Dashboard', [
             'auth' => ['user' => $user],

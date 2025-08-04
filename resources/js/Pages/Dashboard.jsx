@@ -85,6 +85,32 @@ export default function Dashboard({ auth, data, session }) {
                                         key={commande.id}
                                         className="mb-4 p-4 border rounded"
                                     >
+                                        {commande.etat === "en cours" && (
+                                            <form
+                                                method="POST"
+                                                action={route(
+                                                    "commandes.livree",
+                                                    commande.id
+                                                )}
+                                                className="mt-2"
+                                            >
+                                                <input
+                                                    type="hidden"
+                                                    name="_token"
+                                                    value={document
+                                                        .querySelector(
+                                                            'meta[name="csrf-token"]'
+                                                        )
+                                                        .getAttribute(
+                                                            "content"
+                                                        )}
+                                                />
+                                                <button className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
+                                                    Marquer comme livrée
+                                                </button>
+                                            </form>
+                                        )}
+
                                         <p>
                                             <strong>Pickup:</strong>{" "}
                                             {commande.adresse_envoi}
@@ -123,6 +149,78 @@ export default function Dashboard({ auth, data, session }) {
                                         className="mb-4 p-4 border rounded"
                                     >
                                         <p>
+                                            <strong>Status:</strong>{" "}
+                                            {commande.etat}
+                                        </p>
+                                        {commande.etat === "à traiter" && (
+                                            <form
+                                                method="POST"
+                                                action={route(
+                                                    "commandes.affecter",
+                                                    commande.id
+                                                )}
+                                                className="mt-2 flex items-center gap-2"
+                                            >
+                                                <input
+                                                    type="hidden"
+                                                    name="_token"
+                                                    value={document
+                                                        .querySelector(
+                                                            'meta[name="csrf-token"]'
+                                                        )
+                                                        .getAttribute(
+                                                            "content"
+                                                        )}
+                                                />
+
+                                                <select
+                                                    name="livreur_id"
+                                                    required
+                                                    className="border rounded px-2 py-1"
+                                                >
+                                                    {data.livreurs.map(
+                                                        (livreur) => (
+                                                            <option
+                                                                key={livreur.id}
+                                                                value={
+                                                                    livreur.id
+                                                                }
+                                                            >
+                                                                {livreur.nom} (
+                                                                {livreur.email})
+                                                            </option>
+                                                        )
+                                                    )}
+                                                </select>
+                                                <button
+                                                    type="submit"
+                                                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                                                >
+                                                    Affecter
+                                                </button>
+                                            </form>
+                                        )}
+                                        <Link
+                                            as="button"
+                                            method="delete"
+                                            href={route(
+                                                "commandes.destroy",
+                                                commande.id
+                                            )}
+                                            onClick={(e) => {
+                                                if (
+                                                    !confirm(
+                                                        "Annuler cette commande ?"
+                                                    )
+                                                )
+                                                    e.preventDefault();
+                                            }}
+                                            className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                                        >
+                                            Annuler
+                                        </Link>
+
+                                        <p>
                                             <strong>Client:</strong>{" "}
                                             {commande.client?.nom || "N/A"}
                                         </p>
@@ -153,66 +251,75 @@ export default function Dashboard({ auth, data, session }) {
                             <p>No users found.</p>
                         ) : (
                             <ul>
-                                {data.users.map((user) => (
-                                    <li
-                                        key={user.id}
-                                        className="mb-4 p-4 border rounded"
-                                    >
-                                        <p>
-                                            <strong>Name:</strong> {user.nom} (
-                                            {user.role})
-                                        </p>
-                                        <p>
-                                            <strong>Email:</strong> {user.email}
-                                        </p>
-                                        <p>
-                                            <strong>Statut:</strong>{" "}
-                                            {user.statut}
-                                        </p>
+                                {data.users.map((user) => {
+                                    console.log("User:", user); // ✅ Debug
 
-                                        {user.role === "Livreur" && (
-                                            <form
-                                                method="POST"
-                                                action={route(
-                                                    "users.toggleStatus",
-                                                    user.id
-                                                )}
-                                                onSubmit={(e) => {
-                                                    e.preventDefault();
-                                                    if (
-                                                        confirm(
-                                                            `Voulez-vous vraiment ${
-                                                                user.statut ===
-                                                                "actif"
-                                                                    ? "suspendre"
-                                                                    : "activer"
-                                                            } ce livreur ?`
-                                                        )
-                                                    ) {
-                                                        e.target.submit();
-                                                    }
-                                                }}
-                                            >
-                                                <input
-                                                    type="hidden"
-                                                    name="_method"
-                                                    value="PATCH"
-                                                />
-                                                <button
+                                    const peutAfficherBouton =
+                                        user.role === "Livreur" &&
+                                        (user.statut === "actif" ||
+                                            user.statut === "suspendu");
+
+                                    return (
+                                        <li
+                                            key={user.id}
+                                            className="mb-4 p-4 border rounded"
+                                        >
+                                            <p>
+                                                <strong>Name:</strong>{" "}
+                                                {user.nom} ({user.role})
+                                            </p>
+                                            <p>
+                                                <strong>Email:</strong>{" "}
+                                                {user.email}
+                                            </p>
+                                            <p>
+                                                <strong>Statut:</strong>{" "}
+                                                {user.statut}
+                                            </p>
+
+                                            {/* ✅ DEBUG */}
+                                            <p className="text-sm italic text-gray-500">
+                                                DEBUG statut: {user.statut}
+                                            </p>
+
+                                            {/* ✅ BOUTON */}
+                                            {peutAfficherBouton && (
+                                                <Link
+                                                    href={route(
+                                                        "users.toggleStatus",
+                                                        user.id
+                                                    )}
+                                                    method="patch"
+                                                    as="button"
+                                                    type="button"
                                                     className={`mt-2 px-4 py-2 rounded text-white ${
                                                         user.statut === "actif"
                                                             ? "bg-red-500 hover:bg-red-600"
                                                             : "bg-green-500 hover:bg-green-600"
                                                     }`}
+                                                    onClick={(e) => {
+                                                        if (
+                                                            !confirm(
+                                                                `Voulez-vous vraiment ${
+                                                                    user.statut ===
+                                                                    "actif"
+                                                                        ? "suspendre"
+                                                                        : "activer"
+                                                                } ce livreur ?`
+                                                            )
+                                                        ) {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
                                                 >
                                                     {user.statut === "actif"
                                                         ? "Suspendre"
                                                         : "Activer"}
-                                                </button>
-                                            </form>
-                                        )}
-                                    </li>
-                                ))}
+                                                </Link>
+                                            )}
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         )}
                     </div>
