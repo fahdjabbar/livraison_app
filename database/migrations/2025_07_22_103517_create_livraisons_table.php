@@ -18,7 +18,7 @@ return new class extends Migration
             $table->dateTime('date_debut');
             $table->dateTime('date_fin')->nullable();
             $table->enum('statut', ['en cours', 'livrée'])->default('en cours');
-            $table->string('position_actuelle', 255);
+            $table->string('position_actuelle', 255)->nullable();
             $table->json('historique_positions')->nullable();
             $table->timestamps();
         });

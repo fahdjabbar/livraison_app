@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Inertia\Inertia;
 use App\Models\Commande;
+use App\Models\Livraison;
 use Illuminate\Http\Request;
 
 class CommandeController extends Controller
@@ -64,6 +65,17 @@ class CommandeController extends Controller
      $commande->livreur_id = $livreur->id;
      $commande->etat = 'en cours';
      $commande->save();
+
+      // Créer la livraison associée
+    Livraison::create([
+        'commande_id' => $commande->id,
+        'livreur_id' => $livreur->id,
+        'date_debut' => now(),
+        'statut' => 'en cours',
+        'position_actuelle' => null, // Tu peux mettre une valeur initiale si tu veux
+        'historique_positions' => [], // tableau vide au départ
+    ]);
+
      // (Optionnel) Notifier le livreur ici
      return redirect()->route('dashboard')->with('success', 'Livreur affecté avec succès.');
     }
@@ -80,6 +92,31 @@ class CommandeController extends Controller
     $commande->save();
     return redirect()->route('dashboard')->with('success', 'Livreur affecté automatiquement.');
      } 
+
+     public function suivi(Commande $commande)
+{
+    $user = auth()->user();
+
+    // Vérifie les droits d'accès
+    $estProprietaire = $commande->client_id === $user->id;
+    $estAdmin = $user->role === 'Admin';
+
+    if (!($estProprietaire || $estAdmin)) {
+        abort(403, 'Non autorisé à accéder à cette commande.');
+    }
+
+    // Charge les relations utiles (livreur, livraison)
+    $commande->load(['livreur', 'livraison']);
+
+    // Tu peux renvoyer vers SuiviCommande.vue ou AdminShowCommande.vue selon le rôle
+    if ($estAdmin) {
+    return Inertia::render('Commande/AdminShowCommande', ['commande' => $commande]);
+} else {
+    return Inertia::render('Commande/SuiviCommande', ['commande' => $commande]);
+}
+
+}
+
 
      public function marquerLivree(Commande $commande)
 {

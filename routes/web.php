@@ -25,6 +25,14 @@ Route::middleware('auth')->group(function () {
     Route::patch('/users/{user}/toggle-status', [DashboardController::class, 'toggleStatus'])->name('users.toggleStatus');
     Route::post('/commandes/{commande}/affecter', [CommandeController::class, 'affecter'])->name('commandes.affecter');
     Route::delete('/commandes/{commande}', [CommandeController::class, 'destroy'])->name('commandes.destroy'); 
+    // Pour la mise à jour de la position d’une livraison
+    Route::post('/livraisons/{livraison}/position', [LivraisonController::class, 'updatePosition'])->name('livraisons.position');
+    // Accessible à tous les utilisateurs connectés (client + admin)
+     Route::get('/commandes/{commande}/suivi', [CommandeController::class, 'suivi'])
+    ->name('commandes.suivi');
+
+    
+
 
     // 🧍 CLIENT
     Route::middleware('role:Client')->group(function () {

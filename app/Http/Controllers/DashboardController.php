@@ -15,11 +15,17 @@ class DashboardController extends Controller
         $data = [];
 
         if ($user->role === 'Client') {
-            $data['commandes'] = Commande::where('client_id', $user->id)->get();
+            $data['commandes'] = Commande::with('livraison')
+        ->where('client_id', $user->id)
+       ->get();
+
         } elseif ($user->role === 'Livreur') {
-            $data['commandes'] = Commande::where('livreur_id', $user->id)->get();
-        } elseif ($user->role === 'Admin') {
-         $data['commandes'] = Commande::with(['client', 'livreur'])->get();
+         $data['commandes'] = Commande::with('livraison')
+        ->where('livreur_id', $user->id)
+        ->get();
+}
+         elseif ($user->role === 'Admin') {
+         $data['commandes'] = Commande::with(['client', 'livreur' , 'livraison'])->get();
          $data['users'] = User::all();
          $data['livreurs'] = User::where('role', 'Livreur')->where('statut', 'actif')->get();
 }

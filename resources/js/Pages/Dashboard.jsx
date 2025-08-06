@@ -1,5 +1,7 @@
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, useForm } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import AffectationForm from "@/Components/AffectationForm";
+import LivraisonPositionForm from "@/Components/LivraisonPositionForm";
 
 export default function Dashboard({ auth, data, session }) {
     return (
@@ -127,6 +129,31 @@ export default function Dashboard({ auth, data, session }) {
                                             <strong>Status:</strong>{" "}
                                             {commande.etat}
                                         </p>
+
+                                        {commande.livraison &&
+                                            commande.etat === "en cours" && (
+                                                <LivraisonPositionForm
+                                                    livraisonId={
+                                                        commande.livraison.id
+                                                    }
+                                                    initialValue={
+                                                        commande.livraison
+                                                            .position_actuelle
+                                                    }
+                                                />
+                                            )}
+
+                                        {/* Optionnel : afficher la position actuelle */}
+                                        {commande.livraison && (
+                                            <div className="text-sm text-gray-600 mt-1">
+                                                <strong>
+                                                    Position actuelle :
+                                                </strong>{" "}
+                                                {commande.livraison
+                                                    .position_actuelle ||
+                                                    "Non renseignée"}
+                                            </div>
+                                        )}
                                     </li>
                                 ))}
                             </ul>
@@ -153,52 +180,10 @@ export default function Dashboard({ auth, data, session }) {
                                             {commande.etat}
                                         </p>
                                         {commande.etat === "à traiter" && (
-                                            <form
-                                                method="POST"
-                                                action={route(
-                                                    "commandes.affecter",
-                                                    commande.id
-                                                )}
-                                                className="mt-2 flex items-center gap-2"
-                                            >
-                                                <input
-                                                    type="hidden"
-                                                    name="_token"
-                                                    value={document
-                                                        .querySelector(
-                                                            'meta[name="csrf-token"]'
-                                                        )
-                                                        .getAttribute(
-                                                            "content"
-                                                        )}
-                                                />
-
-                                                <select
-                                                    name="livreur_id"
-                                                    required
-                                                    className="border rounded px-2 py-1"
-                                                >
-                                                    {data.livreurs.map(
-                                                        (livreur) => (
-                                                            <option
-                                                                key={livreur.id}
-                                                                value={
-                                                                    livreur.id
-                                                                }
-                                                            >
-                                                                {livreur.nom} (
-                                                                {livreur.email})
-                                                            </option>
-                                                        )
-                                                    )}
-                                                </select>
-                                                <button
-                                                    type="submit"
-                                                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                                                >
-                                                    Affecter
-                                                </button>
-                                            </form>
+                                            <AffectationForm
+                                                livreurs={data.livreurs}
+                                                commandeId={commande.id}
+                                            />
                                         )}
                                         <Link
                                             as="button"
@@ -240,10 +225,20 @@ export default function Dashboard({ auth, data, session }) {
                                             <strong>Status:</strong>{" "}
                                             {commande.etat}
                                         </p>
+                                        <Link
+                                            href={route(
+                                                "commandes.suivi",
+                                                commande.id
+                                            )}
+                                            className="text-blue-500 underline ml-2"
+                                        >
+                                            Suivi / Détail
+                                        </Link>
                                     </li>
                                 ))}
                             </ul>
                         )}
+
                         <h3 className="text-xl font-semibold mb-2 mt-6">
                             All Users
                         </h3>

@@ -1,4 +1,6 @@
 import { Link, router } from "@inertiajs/react";
+import LivraisonMap from "@/Components/LivraisonMap";
+
 
 export default function Show({ commande }) {
     return (
@@ -27,6 +29,25 @@ export default function Show({ commande }) {
                     <p>
                         {commande.livreur.nom} - {commande.livreur.email}
                     </p>
+                </div>
+            )}
+            {/* 👉 MAP ET HISTORIQUE */}
+            {commande.livraison && commande.livraison.position_actuelle && (
+                <div className="mt-6">
+                    <h4 className="font-semibold mb-2">Suivi de la livraison :</h4>
+                    <LivraisonMap
+                        position={commande.livraison.position_actuelle}
+                        historique={commande.livraison.historique_positions || []}
+                    />
+                    {commande.livraison.historique_positions?.length > 0 && (
+                        <ul className="text-xs text-gray-700 mb-3">
+                            {commande.livraison.historique_positions.map((h, i) => (
+                                <li key={i}>
+                                    {h.date} : {h.position}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
             )}
 
