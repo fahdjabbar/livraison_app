@@ -104,28 +104,35 @@ class CommandeController extends Controller
     }
 
     public function suivi(Commande $commande)
-    {
-        $user = auth()->user();
+{
+    $user = auth()->user();
+    $role = strtolower($user->role);
 
-        // Vérifie les droits d'accès
-        $estProprietaire = $commande->client_id === $user->id;
-        $estAdmin = $user->role === 'Admin';
+    $estProprietaire   = $commande->client_id === $user->id;
+    $estAdmin          = $role === 'admin';
+    $estLivreurAffecte = $commande->livreur_id === $user->id; // ✅
 
-        if (!($estProprietaire || $estAdmin)) {
-            abort(403, 'Non autorisé à accéder à cette commande.');
-        }
-
-        // Charge les relations utiles (livreur, livraison)
-        $commande->load(['livreur', 'livraison']);
-
-        // Tu peux renvoyer vers SuiviCommande.vue ou AdminShowCommande.vue selon le rôle
-        if ($estAdmin) {
-            return Inertia::render('Commande/AdminShowCommande', ['commande' => $commande]);
-        } else {
-            return Inertia::render('Commande/SuiviCommande', ['commande' => $commande]);
-        }
-
+    if (!($estProprietaire || $estAdmin || $estLivreurAffecte)) {
+        abort(403, 'Non autorisé à accéder à cette commande.');
     }
+
+    $commande->load(['livreur','livraison','client']);
+
+    if ($estAdmin) {
+        return Inertia::render('Commande/AdminShowCommande', [
+            'commande' => $commande,
+            'livreurs' => \App\Models\User::whereRaw('LOWER(role)="livreur"')
+                           ->where('statut','actif')->get(),
+        ]);
+    }
+
+    // Tu peux renvoyer la même page pour client & livreur, ou une page dédiée livreur :
+    if ($estLivreurAffecte) {
+        return Inertia::render('Commande/SuiviLivreur', ['commande' => $commande]);
+    }
+
+    return Inertia::render('Commande/SuiviCommande', ['commande' => $commande]);
+}
 
     public function marquerLivree(Commande $commande)
     {

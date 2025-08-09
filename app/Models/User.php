@@ -54,4 +54,8 @@ class User extends Authenticatable
     {
         return [];
     }
+    public function setRoleAttribute($value)
+   {
+    $this->attributes['role'] = ucfirst(strtolower($value));
+   }
 }
