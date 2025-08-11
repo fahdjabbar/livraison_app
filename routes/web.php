@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\ChatbotController;
 
 // Page d’accueil
 Route::get('/', function () {
@@ -17,6 +18,9 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 })->name('welcome');
+Route::post('/chatbot/message', [ChatbotController::class, 'message'])
+    ->middleware(['throttle:30,1']) // 30 req / minute
+    ->name('chatbot.message');
 
 // Routes accessibles uniquement si connecté
 Route::middleware('auth')->group(function () {

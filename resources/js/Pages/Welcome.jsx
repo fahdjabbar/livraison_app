@@ -18,6 +18,7 @@ import {
     FaTiktok,
     FaLinkedin,
 } from "react-icons/fa6";
+import ChatWidget from "@/Components/ChatWidget";
 export default function Welcome({ auth, laravelVersion, phpVersion }) {
     const { post } = useForm();
     const [showRegisterOptions, setShowRegisterOptions] = useState(false);
@@ -32,6 +33,8 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
         e.preventDefault();
         setShowRegisterOptions(!showRegisterOptions);
     };
+
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
 
     return (
         <>
@@ -637,6 +640,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     </div>
                 </footer>
             </div>
+            <ChatWidget csrf={csrf} />
         </>
     );
 }
