@@ -16,19 +16,106 @@ class ChatbotController extends Controller
 
         $userMessage = trim($request->input('message'));
 
-        // Switch MVP / AI
-        if (env('CHATBOT_MODE') === 'ai') {
-            $botReply = $ai->ask($userMessage);
-        } else {
-            $botReply = $this->rulesBasedReply($userMessage);
+        // --- Quelques intents utiles (peu intrusifs) ---
+        $normalized = mb_strtolower($userMessage);
+        $intent = null;
+        $orderId = null;
+
+        // suivi #123 ou commande 123
+        if (preg_match('/(?:#|\bcommande\s*)(\d+)/u', $normalized, $m)) {
+            $intent = 'order_by_id';
+            $orderId = (int) $m[1];
+        } elseif (preg_match('/\b(suivi|statut)\b/u', $normalized)) {
+            $intent = 'last_order';
+        } elseif (preg_match('/\b(tarif|prix|coût|cout)\b/u', $normalized)) {
+            $intent = 'pricing';
+        } elseif (preg_match('/\b(zone|villes|couverture|délais|delais)\b/u', $normalized)) {
+            $intent = 'zones';
         }
 
-        return response()->json($botReply);
+        // --- Mode MVP ou IA ---
+        if (env('CHATBOT_MODE') !== 'ai') {
+            $payload = $this->rulesBasedReply($userMessage);
+            return response()->json($payload);
+        }
+
+        // --- Contexte IA ---
+        $user = auth()->user();
+        $role = $user?->role ?? 'Invité';
+
+        // Dernière commande du client
+        $lastOrder = null;
+        if ($user && $role === 'Client') {
+            $lastOrder = Commande::where('client_id', $user->id)
+                ->latest('created_at')->with('livraison','livreur')->first();
+        }
+
+        // Si l’utilisateur a demandé un suivi par #id, on tente de charger
+        $orderById = null;
+        if ($orderId) {
+            $q = Commande::with('livraison','livreur')
+                ->where('id', $orderId);
+
+            // Restriction d’accès : un client ne voit que ses commandes
+            if ($role === 'Client') {
+                $q->where('client_id', $user->id);
+            }
+            $orderById = $q->first();
+        }
+
+        // Construit le contexte transmis à l’IA
+        $context = [
+            'user' => [
+                'id'   => $user?->id,
+                'role' => $role,
+                'email'=> $user?->email,
+            ],
+            'lastOrder' => $lastOrder ? [
+                'id'       => $lastOrder->id,
+                'etat'     => $lastOrder->etat,
+                'position' => optional($lastOrder->livraison)->position_actuelle,
+                'livreur'  => $lastOrder->livreur?->nom,
+            ] : null,
+            'orderById' => $orderById ? [
+                'id'       => $orderById->id,
+                'etat'     => $orderById->etat,
+                'position' => optional($orderById->livraison)->position_actuelle,
+                'livreur'  => $orderById->livreur?->nom,
+            ] : null,
+            'intent' => $intent,
+            'rules'  => [
+                'delais'  => '24/48h grandes villes',
+                'zones'   => 'Maroc',
+                'contact' => 'support@livraisonpro.ma / +212 6 00 00 00 00',
+            ],
+        ];
+
+        // Appel IA
+        $replyText = $ai->ask($userMessage, $context);
+
+        // Suggestions/links basés sur l’intent (tu peux raffiner)
+        $suggestions = match ($intent) {
+            'order_by_id', 'last_order' => ['Ouvrir le suivi', 'Créer une commande', 'Contacter le support'],
+            'pricing'                   => ['Demander un devis', 'Zones & délais', 'Parler à un agent'],
+            'zones'                     => ['Voir nos zones', 'Créer une commande', 'Contacter le support'],
+            default                     => ['Suivre ma commande', 'Créer une commande', 'Contacter le support'],
+        };
+
+        $links = [];
+        if ($orderById) {
+            $links[] = ['label' => 'Ouvrir le suivi', 'href' => route('commandes.suivi', $orderById)];
+        } elseif ($lastOrder) {
+            $links[] = ['label' => 'Ouvrir le suivi', 'href' => route('commandes.suivi', $lastOrder)];
+        }
+
+        return response()->json([
+            'reply' => $replyText,
+            'suggestions' => $suggestions,
+            'links' => $links,
+        ]);
     }
 
-    /**
-     * Logique MVP basée sur des règles simples
-     */
+    // --- MVP rules (inchangé) ---
     private function rulesBasedReply($msg)
     {
         $msg = mb_strtolower($msg);
@@ -84,7 +171,6 @@ class ChatbotController extends Controller
             ];
         }
 
-        // Fallback
         return [
             'reply' => "Je n’ai pas bien compris 🤔. Essayez l’une des options ci-dessous.",
             'suggestions' => ["Suivre ma commande", "Créer une commande", "Parler à un agent"]

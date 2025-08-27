@@ -36,4 +36,14 @@ class Commande extends Model
     {
         return $this->hasOne(Livraison::class);
     }
+    public function bonsRetour()
+    {
+    return $this->hasMany(\App\Models\BonRetour::class);
+    }
+
+public function dernierBonRetour()
+    {
+    return $this->hasOne(\App\Models\BonRetour::class)->latestOfMany();
+    }
+
 }

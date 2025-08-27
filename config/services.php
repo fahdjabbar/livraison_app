@@ -34,9 +34,11 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-    'groq' => [
-    'key' => env('GROQ_API_KEY'),
-    ],
 
+   'groq' => [
+    'key'      => env('GROQ_API_KEY'),
+    'base_uri' => env('GROQ_BASE_URI', 'https://api.groq.com/openai/v1/'),
+    'model'    => env('GROQ_MODEL', 'llama3-8b-8192'),
+],
 
 ];

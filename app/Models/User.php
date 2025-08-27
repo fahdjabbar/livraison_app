@@ -58,4 +58,8 @@ class User extends Authenticatable
    {
     $this->attributes['role'] = ucfirst(strtolower($value));
    }
+   public function bonsRetourDeclares()
+   {
+    return $this->hasMany(\App\Models\BonRetour::class, 'livreur_id');
+   }
 }

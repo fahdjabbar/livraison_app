@@ -1,4 +1,4 @@
-import { Link } from "@inertiajs/react";
+import { Link, useForm } from "@inertiajs/react";
 import LivraisonPositionForm from "@/Components/LivraisonPositionForm";
 import {
     CheckCircleIcon,
@@ -9,6 +9,19 @@ import LivraisonMap from "@/Components/LivraisonMap";
 
 export default function SuiviLivreur({ commande }) {
     const livraison = commande.livraison;
+
+    // Formulaire retour
+    const { data, setData, post, processing, errors, reset } = useForm({
+        motif: "client_absent",
+        commentaire: "",
+    });
+
+    const submitRetour = (e) => {
+        e.preventDefault();
+        post(route("retours.store", commande.id), {
+            onSuccess: () => reset(),
+        });
+    };
 
     return (
         <div className="max-w-3xl mx-auto p-6">
@@ -73,7 +86,8 @@ export default function SuiviLivreur({ commande }) {
                             </div>
                         </div>
 
-                        <div className="mt-6">
+                        <div className="mt-6 flex gap-4 flex-wrap">
+                            {/* Bouton livrée */}
                             <form
                                 method="POST"
                                 action={route("commandes.livree", commande.id)}
@@ -94,6 +108,54 @@ export default function SuiviLivreur({ commande }) {
                                     Marquer comme livrée
                                 </button>
                             </form>
+
+                            {/* Formulaire Déclarer un retour */}
+                           <form
+    method="POST"
+    action={route("retours.store", commande.id)}
+    className="mt-4 space-y-2"
+>
+    <input
+        type="hidden"
+        name="_token"
+        value={
+            document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ?? ""
+        }
+    />
+
+    <label className="block text-sm font-medium text-gray-700">
+        Motif du retour
+    </label>
+    <select
+        name="motif"
+        required
+        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+    >
+        <option value="">-- Choisir un motif --</option>
+        <option value="client_absent">Client absent</option>
+        <option value="adresse_introuvable">Adresse introuvable</option>
+        <option value="refus_client">Refus du client</option>
+        <option value="colis_endommage">Colis endommagé</option>
+        <option value="autre">Autre</option>
+    </select>
+
+    <label className="block text-sm font-medium text-gray-700">
+        Commentaire (optionnel)
+    </label>
+    <textarea
+        name="commentaire"
+        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+        placeholder="Détails..."
+    ></textarea>
+
+    <button
+        type="submit"
+        className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full text-sm shadow"
+    >
+        Déclarer un retour
+    </button>
+</form>
+
                         </div>
 
                         {/* Historique simple */}

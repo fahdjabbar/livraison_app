@@ -2,7 +2,14 @@
 import { useState } from "react";
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
-export default function ChatWidget({ csrf }) {
+function getCsrfFromMeta() {
+  const el = document.querySelector('meta[name="csrf-token"]');
+  return el ? el.getAttribute('content') : '';
+}
+
+export default function ChatWidget({ csrf: csrfProp }) {
+  const csrf = csrfProp || getCsrfFromMeta();
+
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,16 +27,35 @@ export default function ChatWidget({ csrf }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
           "X-CSRF-TOKEN": csrf
         },
+        // Important: cookies de session envoyés (même origine)
+        credentials: "same-origin",
         body: JSON.stringify({ message: text })
       });
+
+      if (!res.ok) {
+        const bodyText = await res.text();
+        console.error("Chatbot HTTP error:", res.status, bodyText);
+
+        // 419 = CSRF token mismatch (souvent hôte différent)
+        if (res.status === 419) {
+          setMessages((m) => [...m, { from: "bot", text: "Session expirée ou CSRF invalide. Rechargez la page et réessayez." }]);
+        } else {
+          setMessages((m) => [...m, { from: "bot", text: "Désolé, une erreur est survenue. Réessayez plus tard." }]);
+        }
+        return;
+      }
+
       const data = await res.json();
       setMessages((m) => [...m, { from: "bot", text: data.reply, links: data.links }]);
       if (data.suggestions?.length) {
         setMessages((m) => [...m, { from: "bot-suggestions", suggestions: data.suggestions }]);
       }
     } catch (e) {
+      console.error("ChatWidget fetch error:", e);
       setMessages((m) => [...m, { from: "bot", text: "Désolé, une erreur est survenue. Réessayez plus tard." }]);
     } finally {
       setLoading(false);
@@ -38,7 +64,6 @@ export default function ChatWidget({ csrf }) {
 
   return (
     <>
-      {/* Bouton flottant */}
       <button
         onClick={() => setOpen(true)}
         className="fixed bottom-6 right-6 z-50 rounded-full p-4 shadow-lg bg-gradient-to-r from-blue-600 to-orange-400 text-white hover:scale-105 transition"
@@ -47,10 +72,8 @@ export default function ChatWidget({ csrf }) {
         <ChatBubbleLeftRightIcon className="w-6 h-6" />
       </button>
 
-      {/* Fenêtre de chat */}
       {open && (
         <div className="fixed bottom-6 right-6 z-50 w-[340px] max-w-[90vw] rounded-2xl shadow-2xl border border-gray-200 bg-white flex flex-col overflow-hidden">
-          {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white">
             <div className="font-semibold">Assistant LivraisonPro</div>
             <button onClick={() => setOpen(false)} aria-label="Fermer">
@@ -58,7 +81,6 @@ export default function ChatWidget({ csrf }) {
             </button>
           </div>
 
-          {/* Messages */}
           <div className="p-3 space-y-2 h-80 overflow-auto">
             {messages.map((m, i) =>
               m.from === "bot-suggestions" ? (
@@ -74,10 +96,7 @@ export default function ChatWidget({ csrf }) {
                   ))}
                 </div>
               ) : (
-                <div
-                  key={i}
-                  className={`${m.from === "user" ? "justify-end" : "justify-start"} flex`}
-                >
+                <div key={i} className={`${m.from === "user" ? "justify-end" : "justify-start"} flex`}>
                   <div
                     className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow ${
                       m.from === "user"
@@ -99,12 +118,9 @@ export default function ChatWidget({ csrf }) {
                 </div>
               )
             )}
-            {loading && (
-              <div className="text-xs text-gray-400 italic">L’assistant écrit…</div>
-            )}
+            {loading && <div className="text-xs text-gray-400 italic">L’assistant écrit…</div>}
           </div>
 
-          {/* Input */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
