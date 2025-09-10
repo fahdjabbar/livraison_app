@@ -293,7 +293,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 </header>
 
                 {/* Hero Section */}
-                <main className="flex-1 flex flex-col justify-center items-center relative pt-36 pb-12">
+                <main className="flex flex-col items-center relative pt-28 md:pt-36 pb-12">
                     <div className="text-center space-y-6 max-w-2xl mx-auto">
                         <h1 className="text-4xl md:text-5xl font-extrabold text-blue-700 leading-tight drop-shadow-lg">
                             Livraison{" "}
@@ -301,10 +301,13 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             &amp; <span className="text-blue-500">Fiable</span>{" "}
                             au Maroc
                         </h1>
+
                         <p className="text-lg md:text-xl text-gray-700/90 mt-2">
-                            Simplifiez votre logistique : suivez, payez à la
+                            Simplifiez votre logistique : suivez, payez à la
                             livraison, restez serein.
                         </p>
+
+                        {/* Boutons */}
                         <div className="mt-6 flex justify-center gap-6">
                             <Link
                                 href={route("register.client")}
@@ -320,14 +323,18 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             </Link>
                         </div>
                     </div>
+
                     {/* Illustration livraison */}
-                    <div className="flex-1 flex items-center justify-center">
-                        <img
-                            src="/img/illu_livraison.png"
-                            alt="Illustration livraison"
-                            className="max-h-80 md:max-h-[340px] w-auto object-contain opacity-90 drop-shadow-xl"
-                            style={{ minWidth: 0, maxWidth: "100%" }}
-                        />
+                    <div className="mt-10 md:mt-12 lg:mt-14 w-full">
+                        <div className="mx-auto max-w-4xl">
+                            <img
+                                src="/img/illu_livraison.png"
+                                alt="Illustration livraison"
+                                className="w-full rounded-3xl shadow-2xl ring-1 ring-black/5 block"
+                                loading="lazy"
+                                decoding="async"
+                            />
+                        </div>
                     </div>
                 </main>
 
